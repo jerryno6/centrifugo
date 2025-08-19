@@ -289,6 +289,9 @@ func Mux(
 			healthPrefix = "/"
 		}
 		mux.Handle(healthPrefix, basicChain.Then(health.NewHandler(n, health.Config{})))
+
+		// Add the new full health check endpoint
+		mux.Handle("/health-full-check", basicChain.Then(health.NewFullHandler(n, health.FullConfig{})))
 	}
 
 	return mux
