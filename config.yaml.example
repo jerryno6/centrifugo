@@ -1,0 +1,23 @@
+log_level: debug
+debug:
+  enabled: true
+health:
+  enabled: true
+client:
+  token:
+    hmac_secret_key: sgXZg55odUZ0PAkeYxP4Ol3SFeKDjTvlLXcSDwjijU4PcHiPYtqJm5ZEPlqSP5sVCrfoH4GMP0EcvFgNWsE6fw
+  allowed_origins:
+    - "*"
+admin:
+  enabled: true
+  password: 8tiuGeVFZmYkiBzHzGrqdA
+  secret: I4T7BWguo_9hG3NwcmUythMwC8oH27eas-d_hT2VXb1cgIWmEWJGLgg-6bB0qP1MH9IIjt93aXRdc-K05xskYQ
+http_api:
+  insecure: true
+  key: ViOrrgfF7SoqUjkHHZy8hFVdlgSRQh3nM2f-7QGGBtxEIWrohMyGEcJ5hSVu2SxDo5j-RXPYoA0PIenERlQGDg
+channel:
+  without_namespace:
+    allow_subscribe_for_client: true
+# engine:
+#   type: redis
+#   redis: {}
