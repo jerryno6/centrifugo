@@ -148,6 +148,11 @@ type ChannelOptions struct {
 	// SubscribeProxyName of proxy to use for subscribe operations in namespace.
 	SubscribeProxyName string `mapstructure:"subscribe_proxy_name" default:"default" json:"subscribe_proxy_name" envconfig:"subscribe_proxy_name" yaml:"subscribe_proxy_name" toml:"subscribe_proxy_name"`
 
+	// MessageProxyEnabled turns on using proxy for message operations in namespace.
+	MessageProxyEnabled bool `mapstructure:"message_proxy_enabled" json:"message_proxy_enabled" envconfig:"message_proxy_enabled" yaml:"message_proxy_enabled" toml:"message_proxy_enabled"`
+	// MessageProxyName of proxy to use for message operations in namespace.
+	MessageProxyName string `mapstructure:"message_proxy_name" default:"default" json:"message_proxy_name" envconfig:"message_proxy_name" yaml:"message_proxy_name" toml:"message_proxy_name"`
+
 	// PublishProxyEnabled turns on using proxy for publish operations in namespace.
 	PublishProxyEnabled bool `mapstructure:"publish_proxy_enabled" json:"publish_proxy_enabled" envconfig:"publish_proxy_enabled" yaml:"publish_proxy_enabled" toml:"publish_proxy_enabled"`
 	// PublishProxyName of proxy to use for publish operations in namespace.

@@ -36,6 +36,10 @@ func (e *JSONEncoder) EncodePublishRequest(req *PublishRequest) ([]byte, error) 
 	return json.Marshal(req)
 }
 
+func (e *JSONEncoder) EncodeMessageRequest(req *MessageRequest) ([]byte, error) {
+	return json.Marshal(req)
+}
+
 func (e *JSONEncoder) EncodeSubRefreshRequest(req *SubRefreshRequest) ([]byte, error) {
 	return json.Marshal(req)
 }

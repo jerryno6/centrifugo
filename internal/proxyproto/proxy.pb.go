@@ -7,10 +7,11 @@
 package proxyproto
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -1268,6 +1269,21 @@ func (x *SubscribeResponse) GetDisconnect() *Disconnect {
 	return nil
 }
 
+type MessageRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Client    string `protobuf:"bytes,1,opt,name=client,proto3" json:"client,omitempty"`
+	Transport string `protobuf:"bytes,2,opt,name=transport,proto3" json:"transport,omitempty"`
+	Protocol  string `protobuf:"bytes,3,opt,name=protocol,proto3" json:"protocol,omitempty"`
+	Encoding  string `protobuf:"bytes,4,opt,name=encoding,proto3" json:"encoding,omitempty"`
+	User      string `protobuf:"bytes,10,opt,name=user,proto3" json:"user"`
+	Data      Raw    `protobuf:"bytes,11,opt,name=data,proto3" json:"data,omitempty"`
+	B64Data   string `protobuf:"bytes,12,opt,name=b64data,proto3" json:"b64data,omitempty"`
+	Meta      Raw    `protobuf:"bytes,13,opt,name=meta,proto3" json:"meta,omitempty"`
+}
+
 type PublishRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1379,6 +1395,16 @@ func (x *PublishRequest) GetMeta() []byte {
 	return nil
 }
 
+type MessageResult struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Data        Raw    `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	B64Data     string `protobuf:"bytes,2,opt,name=b64data,proto3" json:"b64data,omitempty"`
+	SkipHistory bool   `protobuf:"varint,3,opt,name=skip_history,json=skipHistory,proto3" json:"skip_history,omitempty"`
+}
+
 type PublishResult struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1440,6 +1466,16 @@ func (x *PublishResult) GetSkipHistory() bool {
 		return x.SkipHistory
 	}
 	return false
+}
+
+type MessageResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Result     *PublishResult `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
+	Error      *Error         `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	Disconnect *Disconnect    `protobuf:"bytes,3,opt,name=disconnect,proto3" json:"disconnect,omitempty"`
 }
 
 type PublishResponse struct {

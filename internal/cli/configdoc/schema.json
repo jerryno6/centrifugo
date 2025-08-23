@@ -5052,6 +5052,26 @@
             "is_complex_type": false
           },
           {
+            "field": "channel.without_namespace.message_proxy_enabled",
+            "name": "message_proxy_enabled",
+            "go_name": "MessageProxyEnabled",
+            "level": 3,
+            "type": "bool",
+            "default": "",
+            "comment": "MessageProxyEnabled turns on using proxy for message operations in namespace.",
+            "is_complex_type": false
+          },
+          {
+            "field": "channel.without_namespace.message_proxy_name",
+            "name": "message_proxy_name",
+            "go_name": "MessageProxyName",
+            "level": 3,
+            "type": "string",
+            "default": "default",
+            "comment": "MessageProxyName of proxy to use for message operations in namespace.",
+            "is_complex_type": false
+          },
+          {
             "field": "channel.without_namespace.publish_proxy_enabled",
             "name": "publish_proxy_enabled",
             "go_name": "PublishProxyEnabled",
@@ -5421,6 +5441,26 @@
             "type": "string",
             "default": "default",
             "comment": "SubscribeProxyName of proxy to use for subscribe operations in namespace.",
+            "is_complex_type": false
+          },
+          {
+            "field": "channel.namespaces[].message_proxy_enabled",
+            "name": "message_proxy_enabled",
+            "go_name": "MessageProxyEnabled",
+            "level": 3,
+            "type": "bool",
+            "default": "",
+            "comment": "MessageProxyEnabled turns on using proxy for message operations in namespace.",
+            "is_complex_type": false
+          },
+          {
+            "field": "channel.namespaces[].message_proxy_name",
+            "name": "message_proxy_name",
+            "go_name": "MessageProxyName",
+            "level": 3,
+            "type": "string",
+            "default": "default",
+            "comment": "MessageProxyName of proxy to use for message operations in namespace.",
             "is_complex_type": false
           },
           {

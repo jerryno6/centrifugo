@@ -164,6 +164,31 @@ message SubscribeResponse {
   Disconnect disconnect = 3;
 }
 
+message MessageRequest {
+  string client = 1;
+  string transport = 2;
+  string protocol = 3;
+  string encoding = 4;
+
+  string user = 10;
+  string channel = 11;
+  bytes data = 12;
+  string b64data = 13;
+  bytes meta = 14;
+}
+
+message MessageResult {
+  bytes data = 1;
+  string b64data = 2;
+  bool skip_history = 3;
+}
+
+message MessageResponse {
+  MessageResult result = 1;
+  Error error = 2;
+  Disconnect disconnect = 3;
+}
+
 message PublishRequest {
   string client = 1;
   string transport = 2;

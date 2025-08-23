@@ -28,6 +28,7 @@ type ProxyMap struct {
 	ConnectProxy           proxy.ConnectProxy
 	RefreshProxy           proxy.RefreshProxy
 	RpcProxies             map[string]proxy.RPCProxy
+	MessageProxies         map[string]proxy.MessageProxy
 	PublishProxies         map[string]proxy.PublishProxy
 	SubscribeProxies       map[string]proxy.SubscribeProxy
 	SubRefreshProxies      map[string]proxy.SubRefreshProxy
@@ -96,6 +97,13 @@ func (h *Handler) Setup() error {
 		rpcProxyHandler = proxy.NewRPCHandler(proxy.RPCHandlerConfig{
 			Proxies: h.proxyMap.RpcProxies,
 		}).Handle()
+	}
+
+	var messageProxyHandler proxy.MessageHandlerFunc
+	if len(h.proxyMap.MessageProxies) > 0 {
+		messageProxyHandler = proxy.NewMessageHandler(proxy.MessageHandlerConfig{
+			Proxies: h.proxyMap.MessageProxies,
+		}).Handle(h.node)
 	}
 
 	var publishProxyHandler proxy.PublishHandlerFunc
@@ -200,6 +208,15 @@ func (h *Handler) Setup() error {
 			h.runConcurrentlyIfNeeded(client.Context(), concurrency, semaphore, func() {
 				reply, _, err := h.OnSubRefresh(client, subRefreshProxyHandler, event)
 				cb(reply, err)
+			})
+		})
+
+		client.OnMessage(func(event centrifuge.MessageEvent) {
+			h.runConcurrentlyIfNeeded(client.Context(), concurrency, semaphore, func() {
+				reply, err := h.OnMessage(client, event, messageProxyHandler)
+				// TODO: handle reply and error
+				_ = reply
+				_ = err
 			})
 		})
 
@@ -762,6 +779,49 @@ func (h *Handler) OnSubscribe(c Client, e centrifuge.SubscribeEvent, subscribePr
 		Options:           options,
 		ClientSideRefresh: !chOpts.SubRefreshProxyEnabled,
 	}, SubscribeExtra{}, nil
+}
+
+type WSMessage struct {
+	Type string `json:"type"`
+	Data Score  `json:"data"`
+}
+
+// Score represents a score submission from client
+type Score struct {
+	GameID     string `json:"gameId"`
+	UserID     string `json:"userId"`
+	Score      int    `json:"score"`
+	TotalScore int    `json:"totalScore"`
+	Timestamp  int64  `json:"timestamp"` // epoch time in UnixMicro()
+}
+
+// OnMessage ...
+func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent, messageProxyHandler proxy.MessageHandlerFunc) error {
+	cfg := h.cfgContainer.Config()
+
+	var allowed bool
+
+	if cfg.Client.Insecure {
+		allowed = true
+	}
+
+	if !allowed {
+		log.Info().Str("client", c.ID()).Str("user", c.UserID()).Msg("attempt to publish without sufficient permission")
+		return centrifuge.ErrorPermissionDenied
+	}
+
+	log.Info().Str("user", c.UserID()).Msg("message saved")
+
+	var wsMsg WSMessage
+	err := json.Unmarshal(e.Data, &wsMsg)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to unmarshal WSMessage")
+		return centrifuge.ErrorBadRequest
+	}
+
+	// publish message to messageBroker
+
+	return nil
 }
 
 // OnPublish ...

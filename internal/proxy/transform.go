@@ -15,6 +15,17 @@ func transformConnectResponse(err error, statusToCodeTransforms configtypes.Http
 	}
 	return nil, err
 }
+func transformMessageResponse(err error, statusToCodeTransforms configtypes.HttpStatusToCodeTransforms) (*proxyproto.MessageResponse, error) {
+	//todo: update the content
+	protocolError, protocolDisconnect := transformHTTPStatusError(err, statusToCodeTransforms)
+	if protocolError != nil || protocolDisconnect != nil {
+		return &proxyproto.MessageResponse{
+			Error:      protocolError,
+			Disconnect: protocolDisconnect,
+		}, nil
+	}
+	return nil, err
+}
 
 func transformPublishResponse(err error, statusToCodeTransforms configtypes.HttpStatusToCodeTransforms) (*proxyproto.PublishResponse, error) {
 	protocolError, protocolDisconnect := transformHTTPStatusError(err, statusToCodeTransforms)
