@@ -213,9 +213,8 @@ func (h *Handler) Setup() error {
 
 		client.OnMessage(func(event centrifuge.MessageEvent) {
 			h.runConcurrentlyIfNeeded(client.Context(), concurrency, semaphore, func() {
-				reply, err := h.OnMessage(client, event, messageProxyHandler)
+				err := h.OnMessage(client, event, messageProxyHandler)
 				// TODO: handle reply and error
-				_ = reply
 				_ = err
 			})
 		})
