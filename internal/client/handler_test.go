@@ -817,6 +817,23 @@ func TestClientSubscribePermissionDeniedForAnonymous(t *testing.T) {
 	require.Equal(t, centrifuge.ErrorPermissionDenied, err)
 }
 
+func TestClientOnMessage_HappyCase(t *testing.T) {
+	node := tools.NodeWithMemoryEngineNoHandlers()
+	defer func() { _ = node.Shutdown(context.Background()) }()
+
+	cfg := config.DefaultConfig()
+	cfg.Channel.WithoutNamespace.PublishForClient = true
+	cfg.Channel.WithoutNamespace.PublishForAnonymous = true
+	cfgContainer, err := config.NewContainer(cfg)
+	require.NoError(t, err)
+	h := NewHandler(node, cfgContainer, hmacJWTVerifier(t, cfgContainer), nil, &ProxyMap{})
+
+	err = h.OnMessage(&centrifuge.Client{}, centrifuge.MessageEvent{
+		Data: []byte(`{"type":"score_update","data":{"gameId":"game123","userId":"1","score":0,"totalScore":10,"timestamp":1755869251000000}}`),
+	})
+	require.NoError(t, err)
+}
+
 func TestClientPublishNotAllowed(t *testing.T) {
 	node := tools.NodeWithMemoryEngineNoHandlers()
 	defer func() { _ = node.Shutdown(context.Background()) }()

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"unicode"
 
+	"github.com/centrifugal/centrifugo/v6/internal/brokerpublishing"
 	"github.com/centrifugal/centrifugo/v6/internal/clientcontext"
 	"github.com/centrifugal/centrifugo/v6/internal/clientstorage"
 	"github.com/centrifugal/centrifugo/v6/internal/config"
@@ -99,12 +100,12 @@ func (h *Handler) Setup() error {
 		}).Handle()
 	}
 
-	var messageProxyHandler proxy.MessageHandlerFunc
-	if len(h.proxyMap.MessageProxies) > 0 {
-		messageProxyHandler = proxy.NewMessageHandler(proxy.MessageHandlerConfig{
-			Proxies: h.proxyMap.MessageProxies,
-		}).Handle(h.node)
-	}
+	// var messageProxyHandler proxy.MessageHandlerFunc
+	// if len(h.proxyMap.MessageProxies) > 0 {
+	// 	messageProxyHandler = proxy.NewMessageHandler(proxy.MessageHandlerConfig{
+	// 		Proxies: h.proxyMap.MessageProxies,
+	// 	}).Handle(h.node)
+	// }
 
 	var publishProxyHandler proxy.PublishHandlerFunc
 	if len(h.proxyMap.PublishProxies) > 0 {
@@ -213,7 +214,7 @@ func (h *Handler) Setup() error {
 
 		client.OnMessage(func(event centrifuge.MessageEvent) {
 			h.runConcurrentlyIfNeeded(client.Context(), concurrency, semaphore, func() {
-				err := h.OnMessage(client, event, messageProxyHandler)
+				err := h.OnMessage(client, event)
 				// TODO: handle reply and error
 				_ = err
 			})
@@ -795,10 +796,10 @@ type Score struct {
 }
 
 // OnMessage ...
-func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent, messageProxyHandler proxy.MessageHandlerFunc) error {
+func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent) error {
 	cfg := h.cfgContainer.Config()
 
-	var allowed bool
+	var allowed bool = true
 
 	if cfg.Client.Insecure {
 		allowed = true
@@ -809,8 +810,6 @@ func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent, messageProxyHan
 		return centrifuge.ErrorPermissionDenied
 	}
 
-	log.Info().Str("user", c.UserID()).Msg("message saved")
-
 	var wsMsg WSMessage
 	err := json.Unmarshal(e.Data, &wsMsg)
 	if err != nil {
@@ -818,9 +817,18 @@ func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent, messageProxyHan
 		return centrifuge.ErrorBadRequest
 	}
 
-	// publish message to messageBroker
+	// TODO: later, we need to get info from event.Data such as: topic to publish,
+	topic := "score"
+	// TODO: for now, just keep it as it is and publish to Kafka
 
-	return nil
+	// publish message to messageBroker
+	err = brokerpublishing.Publish(c.ID(), c.UserID(), topic, e.Data, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to publish message to messageBroker")
+		return centrifuge.ErrorBadRequest
+	}
+
+	return err
 }
 
 // OnPublish ...
