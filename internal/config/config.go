@@ -59,6 +59,9 @@ type Config struct {
 	// Consumers is a configuration for message queue consumers. For example, Centrifugo can consume
 	// messages from PostgreSQL transactional outbox table, or from Kafka topics.
 	Consumers configtypes.Consumers `mapstructure:"consumers" default:"[]" json:"consumers" envconfig:"consumers" toml:"consumers" yaml:"consumers"`
+	// Publishers is a configuration for message publishers. For example, Centrifugo can publish
+	// messages to Kafka topics.
+	Publishers configtypes.Publishers `mapstructure:"publishers" default:"[]" json:"publishers" envconfig:"publishers" toml:"publishers" yaml:"publishers"`
 
 	// WebSocket configuration. This transport is enabled by default.
 	WebSocket configtypes.WebSocket `mapstructure:"websocket" json:"websocket" envconfig:"websocket" toml:"websocket" yaml:"websocket"`
@@ -234,6 +237,15 @@ func GetConfig(cmd *cobra.Command, configFile string) (Config, Meta, error) {
 			return Config{}, Meta{}, fmt.Errorf("error processing env consumers: %w", err)
 		}
 		conf.Consumers[i] = item
+		extendKnownEnvVars(knownEnvVars, varInfo)
+	}
+
+	for i, item := range conf.Publishers {
+		varInfo, err = envconfig.Process("CENTRIFUGO_PUBLISHERS_"+configtypes.NameForEnv(item.Name), &item)
+		if err != nil {
+			return Config{}, Meta{}, fmt.Errorf("error processing env publishers: %w", err)
+		}
+		conf.Publishers[i] = item
 		extendKnownEnvVars(knownEnvVars, varInfo)
 	}
 

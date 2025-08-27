@@ -817,12 +817,19 @@ func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent) error {
 		return centrifuge.ErrorBadRequest
 	}
 
-	// TODO: later, we need to get info from event.Data such as: topic to publish,
-	topic := "score"
-	// TODO: for now, just keep it as it is and publish to Kafka
+	// currently, we only support 1 topic
+	topic := cfg.Publishers[0].Kafka.Topics[0]
+
+	// TODO: should move this to initializer
+	// Get kafka client
+	client, err := brokerpublishing.GetKafkaClient(c.UserID(), cfg.Publishers[0].Kafka.Brokers)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get Kafka client")
+		return centrifuge.ErrorBadRequest
+	}
 
 	// publish message to messageBroker
-	err = brokerpublishing.Publish(c.ID(), c.UserID(), topic, e.Data, nil)
+	err = brokerpublishing.Publish(client, topic, e.Data, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to publish message to messageBroker")
 		return centrifuge.ErrorBadRequest

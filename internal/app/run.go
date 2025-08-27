@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/centrifugal/centrifugo/v6/internal/api"
+	"github.com/centrifugal/centrifugo/v6/internal/brokerpublishing"
 	"github.com/centrifugal/centrifugo/v6/internal/build"
 	"github.com/centrifugal/centrifugo/v6/internal/client"
 	"github.com/centrifugal/centrifugo/v6/internal/config"
@@ -194,6 +195,7 @@ func Run(cmd *cobra.Command, configFile string) {
 		UseOpenTelemetry: useConsumingOpentelemetry,
 	})
 
+	// todo: write code for publishingHandler & add publishingService to serviceManager
 	consumingHandler := api.NewConsumingHandler(node, consumingAPIExecutor, api.ConsumingHandlerConfig{
 		UseOpenTelemetry: useConsumingOpentelemetry,
 	})
@@ -368,6 +370,13 @@ func handleSignals(
 					defer wg.Done()
 					grpcAPIServer.GracefulStop()
 				}()
+			}
+
+			// pass empty, nil to get current client
+			client, _ := brokerpublishing.GetKafkaClient("", nil)
+			if client != nil {
+				client.Context().Done()
+				client.Close()
 			}
 
 			if grpcUniServer != nil {

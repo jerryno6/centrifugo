@@ -727,6 +727,58 @@ func (d *Consumers) Decode(value string) error {
 	return decodeToNamedSlice(value, d)
 }
 
+// Message Publisher configuration.
+type Publisher struct {
+	// Name is a unique name required for each publisher.
+	Name string `mapstructure:"name" json:"name" envconfig:"name" yaml:"name" toml:"name"`
+
+	// Enabled must be true to tell Centrifugo to run configured publisher.
+	Enabled bool `mapstructure:"enabled" json:"enabled" envconfig:"enabled" yaml:"enabled" toml:"enabled"`
+
+	// Kafka allows defining options for kafka publisher.
+	Kafka KafkaPublisherConfig `mapstructure:"kafka" json:"kafka" envconfig:"kafka" yaml:"kafka" toml:"kafka"`
+}
+
+// KafkaPublisherConfig is a configuration for Kafka async publisher.
+type KafkaPublisherConfig struct {
+	// Brokers is a list of Kafka broker addresses.
+	Brokers []string `mapstructure:"brokers" json:"brokers" envconfig:"brokers" yaml:"brokers" toml:"brokers"`
+	// Topics is a list of Kafka topics to publish to.
+	Topics []string `mapstructure:"topics" json:"topics" envconfig:"topics" yaml:"topics" toml:"topics"`
+	// ClientID is the Kafka client ID to use.
+	ClientID string `mapstructure:"client_id" json:"client_id" envconfig:"client_id" yaml:"client_id" toml:"client_id"`
+	// TLS for the connection to Kafka.
+	TLS TLSConfig `mapstructure:"tls" json:"tls" envconfig:"tls" yaml:"tls" toml:"tls"`
+	// SASLMechanism when not empty enables SASL auth.
+	SASLMechanism string `mapstructure:"sasl_mechanism" json:"sasl_mechanism" envconfig:"sasl_mechanism" yaml:"sasl_mechanism" toml:"sasl_mechanism"`
+	SASLUser      string `mapstructure:"sasl_user" json:"sasl_user" envconfig:"sasl_user" yaml:"sasl_user" toml:"sasl_user"`
+	SASLPassword  string `mapstructure:"sasl_password" json:"sasl_password" envconfig:"sasl_password" yaml:"sasl_password" toml:"sasl_password"`
+}
+
+func (c KafkaPublisherConfig) Validate() error {
+	if len(c.Brokers) == 0 {
+		return errors.New("no Kafka brokers provided")
+	}
+	if len(c.Topics) == 0 {
+		return errors.New("no Kafka topics provided")
+	}
+	return nil
+}
+
+func (p Publisher) Validate() error {
+	if p.Enabled {
+		return p.Kafka.Validate()
+	}
+	return nil
+}
+
+type Publishers []Publisher
+
+// Decode to implement the envconfig.Decoder interface
+func (d *Publishers) Decode(value string) error {
+	return decodeToNamedSlice(value, d)
+}
+
 // PostgresConsumerConfig is a configuration for Postgres async outbox table consumer.
 type PostgresConsumerConfig struct {
 	DSN                          string    `mapstructure:"dsn" json:"dsn" envconfig:"dsn" yaml:"dsn" toml:"dsn"`

@@ -96,6 +96,7 @@ type Features struct {
 	SubscribeStreamProxy bool
 
 	EnabledConsumers []string
+	EnabledPublishers []string
 
 	// Uses GRPC server API.
 	GrpcAPI bool
@@ -399,6 +400,12 @@ func (s *Sender) prepareMetrics() ([]*metric, error) {
 	for _, consumerType := range s.features.EnabledConsumers {
 		metrics = append(metrics, createPoint("consumers_enabled."+consumerType))
 	}
+	if len(s.features.EnabledPublishers) > 0 {
+		metrics = append(metrics, createPoint("features_enabled.publishers"))
+	}
+	for _, publisherType := range s.features.EnabledPublishers {
+		metrics = append(metrics, createPoint("publishers_enabled."+publisherType))
+	}
 	if s.features.GrpcAPI {
 		metrics = append(metrics, createPoint("features_enabled.grpc_api"))
 	}
@@ -612,4 +619,14 @@ func GetEnabledConsumers(consumers []consuming.ConsumerConfig) []string {
 		}
 	}
 	return enabledConsumers
+}
+
+func GetEnabledPublishers(publishers []configtypes.Publisher) []string {
+	var enabledPublishers []string
+	for _, p := range publishers {
+		if p.Enabled {
+			enabledPublishers = append(enabledPublishers, "kafka")
+		}
+	}
+	return enabledPublishers
 }

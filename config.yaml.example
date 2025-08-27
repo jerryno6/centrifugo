@@ -1,5 +1,6 @@
-log_level: debug
-debug:
+log:
+  level: debug
+health:
   enabled: true
 health:
   enabled: true
@@ -21,3 +22,33 @@ channel:
 # engine:
 #   type: redis
 #   redis: {}
+publishers:
+  - enabled: true
+    kafka:
+      brokers:
+        - localhost:19092
+        - localhost:29092
+        - localhost:39092
+      topics:
+        - score
+      client_id: centrifugo
+consumers:
+  - enabled: true
+    name: my_kafka_consumer
+    type: kafka
+    kafka:
+      brokers:
+        - localhost:19092
+        - localhost:29092
+        - localhost:39092
+      topics:
+        - leaderboard
+      consumer_group: centrifugo
+      fetch_read_uncommitted: true
+      max_poll_records: 10 # (default 100)
+      fetch_max_bytes: 2097152 # 2Mb (default 50Mb)
+      fetch_max_wait: 100ms
+      publication_data_mode:
+        enabled: true
+        channels_header: "x-centrifugo-channels"
+        idempotency_key_header: "x-centrifugo-idempotentcy-key"

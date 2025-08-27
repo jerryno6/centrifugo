@@ -1,4 +1,4 @@
-//abcgo:build integration
+//go:build integration
 
 package brokerpublishing
 
@@ -194,8 +194,11 @@ func TestKafkaPublisher_ShouldPublishMessageSuccessfully(t *testing.T) {
 	payload, err := json.Marshal(sample)
 	require.NoError(t, err)
 
+	client, err := GetKafkaClient(userId, []string{testKafkaBrokerURL})
+	require.NoError(t, err)
+
 	// 2. Act
-	err = Publish(clientId, userId, kafkaTopic, payload, nil)
+	err = Publish(client, kafkaTopic, payload, nil)
 
 	// 3. Assert
 	require.NoError(t, err)
@@ -240,8 +243,11 @@ func TestClientSend_ShouldPublishMessageSuccessfully(t *testing.T) {
 	payload, err := json.Marshal(sample)
 	require.NoError(t, err)
 
+	client, err := GetKafkaClient(userId, []string{testKafkaBrokerURL})
+	require.NoError(t, err)
+
 	// 2. Act
-	err = Publish(clientId, userId, kafkaTopic, payload, nil)
+	err = Publish(client, kafkaTopic, payload, nil)
 
 	// 3. Assert
 	require.NoError(t, err)

@@ -146,6 +146,40 @@ func (c Config) Validate() error {
 		consumerNames = append(consumerNames, config.Name)
 	}
 
+	var publisherNames []string
+	for _, config := range c.Publishers {
+		if !consumerNameRe.Match([]byte(config.Name)) {
+			return fmt.Errorf("invalid publisher name: %s, must match %s regular expression", config.Name, consumerNamePattern)
+		}
+		if slices.Contains(publisherNames, config.Name) {
+			return fmt.Errorf("invalid publisher name: %s, must be unique", config.Name)
+		}
+		if config.Enabled {
+			if err := config.Validate(); err != nil {
+				return fmt.Errorf("in publisher %s: %w", config.Name, err)
+			}
+		}
+		publisherNames = append(publisherNames, config.Name)
+	}
+
+	for _, config := range c.Publishers {
+		if config.Enabled && config.Kafka.Topics != nil {
+			if len(config.Kafka.Topics) == 0 {
+				return fmt.Errorf("in publisher %s: kafka topics must not be empty", config.Name)
+			}
+			topicNames := make(map[string]struct{})
+			for _, topic := range config.Kafka.Topics {
+				if topic == "" {
+					return fmt.Errorf("in publisher %s: kafka topic name must not be empty", config.Name)
+				}
+				if _, exists := topicNames[topic]; exists {
+					return fmt.Errorf("in publisher %s: duplicate kafka topic name: %s", config.Name, topic)
+				}
+				topicNames[topic] = struct{}{}
+			}
+		}
+	}
+
 	if err := validateConnectCodeTransforms(c.UniSSE.ConnectCodeToHTTPResponse.Transforms); err != nil {
 		return fmt.Errorf("in uni_sse.connect_code_to_http_status.transforms: %v", err)
 	}

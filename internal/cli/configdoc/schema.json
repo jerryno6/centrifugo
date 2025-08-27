@@ -8604,6 +8604,192 @@
     ]
   },
   {
+    "field": "publishers",
+    "name": "publishers",
+    "go_name": "Publishers",
+    "level": 1,
+    "type": "[]Publisher",
+    "default": "[]",
+    "comment": "Publishers is a configuration for message publishers. For example, Centrifugo can publish\nmessages to Kafka topics.",
+    "is_complex_type": true,
+    "children": [
+      {
+        "field": "publishers[].name",
+        "name": "name",
+        "go_name": "Name",
+        "level": 2,
+        "type": "string",
+        "default": "",
+        "comment": "Name is a unique name required for each publisher.",
+        "is_complex_type": false
+      },
+      {
+        "field": "publishers[].enabled",
+        "name": "enabled",
+        "go_name": "Enabled",
+        "level": 2,
+        "type": "bool",
+        "default": "",
+        "comment": "Enabled must be true to tell Centrifugo to run configured publisher.",
+        "is_complex_type": false
+      },
+      {
+        "field": "publishers[].kafka",
+        "name": "kafka",
+        "go_name": "Kafka",
+        "level": 2,
+        "type": "KafkaPublisherConfig",
+        "default": "",
+        "comment": "Kafka allows defining options for kafka publisher.",
+        "is_complex_type": true,
+        "children": [
+          {
+            "field": "publishers[].kafka.brokers",
+            "name": "brokers",
+            "go_name": "Brokers",
+            "level": 3,
+            "type": "[]string",
+            "default": "",
+            "comment": "Brokers is a list of Kafka broker addresses.",
+            "is_complex_type": false
+          },
+          {
+            "field": "publishers[].kafka.topics",
+            "name": "topics",
+            "go_name": "Topics",
+            "level": 3,
+            "type": "[]string",
+            "default": "",
+            "comment": "Topics is a list of Kafka topics to publish to.",
+            "is_complex_type": false
+          },
+          {
+            "field": "publishers[].kafka.client_id",
+            "name": "client_id",
+            "go_name": "ClientID",
+            "level": 3,
+            "type": "string",
+            "default": "",
+            "comment": "ClientID is the Kafka client ID to use.",
+            "is_complex_type": false
+          },
+          {
+            "field": "publishers[].kafka.tls",
+            "name": "tls",
+            "go_name": "TLS",
+            "level": 3,
+            "type": "TLSConfig",
+            "default": "",
+            "comment": "TLS for the connection to Kafka.",
+            "is_complex_type": true,
+            "children": [
+              {
+                "field": "publishers[].kafka.tls.enabled",
+                "name": "enabled",
+                "go_name": "Enabled",
+                "level": 4,
+                "type": "bool",
+                "default": "",
+                "comment": "Enabled turns on using TLS.",
+                "is_complex_type": false
+              },
+              {
+                "field": "publishers[].kafka.tls.cert_pem",
+                "name": "cert_pem",
+                "go_name": "CertPem",
+                "level": 4,
+                "type": "PEMData",
+                "default": "",
+                "comment": "CertPem is a PEM certificate.",
+                "is_complex_type": false
+              },
+              {
+                "field": "publishers[].kafka.tls.key_pem",
+                "name": "key_pem",
+                "go_name": "KeyPem",
+                "level": 4,
+                "type": "PEMData",
+                "default": "",
+                "comment": "KeyPem is a path to a file with key in PEM format.",
+                "is_complex_type": false
+              },
+              {
+                "field": "publishers[].kafka.tls.server_ca_pem",
+                "name": "server_ca_pem",
+                "go_name": "ServerCAPem",
+                "level": 4,
+                "type": "PEMData",
+                "default": "",
+                "comment": "ServerCAPem is a server root CA certificate in PEM format.\nThe client uses this certificate to verify the server's certificate during the TLS handshake.",
+                "is_complex_type": false
+              },
+              {
+                "field": "publishers[].kafka.tls.client_ca_pem",
+                "name": "client_ca_pem",
+                "go_name": "ClientCAPem",
+                "level": 4,
+                "type": "PEMData",
+                "default": "",
+                "comment": "ClientCAPem is a client CA certificate in PEM format.\nThe server uses this certificate to verify the client's certificate during the TLS handshake.",
+                "is_complex_type": false
+              },
+              {
+                "field": "publishers[].kafka.tls.insecure_skip_verify",
+                "name": "insecure_skip_verify",
+                "go_name": "InsecureSkipVerify",
+                "level": 4,
+                "type": "bool",
+                "default": "",
+                "comment": "InsecureSkipVerify turns off server certificate verification.",
+                "is_complex_type": false
+              },
+              {
+                "field": "publishers[].kafka.tls.server_name",
+                "name": "server_name",
+                "go_name": "ServerName",
+                "level": 4,
+                "type": "string",
+                "default": "",
+                "comment": "ServerName is used to verify the hostname on the returned certificates.",
+                "is_complex_type": false
+              }
+            ]
+          },
+          {
+            "field": "publishers[].kafka.sasl_mechanism",
+            "name": "sasl_mechanism",
+            "go_name": "SASLMechanism",
+            "level": 3,
+            "type": "string",
+            "default": "",
+            "comment": "SASLMechanism when not empty enables SASL auth.",
+            "is_complex_type": false
+          },
+          {
+            "field": "publishers[].kafka.sasl_user",
+            "name": "sasl_user",
+            "go_name": "SASLUser",
+            "level": 3,
+            "type": "string",
+            "default": "",
+            "comment": "",
+            "is_complex_type": false
+          },
+          {
+            "field": "publishers[].kafka.sasl_password",
+            "name": "sasl_password",
+            "go_name": "SASLPassword",
+            "level": 3,
+            "type": "string",
+            "default": "",
+            "comment": "",
+            "is_complex_type": false
+          }
+        ]
+      }
+    ]
+  },
+  {
     "field": "websocket",
     "name": "websocket",
     "go_name": "WebSocket",
