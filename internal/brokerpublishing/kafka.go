@@ -14,12 +14,14 @@ var (
 	kafkaClientOnce sync.Once
 )
 
+const clientID = "centrifugo"
+
 // GetKafkaClient returns a Kafka client for the given client ID and brokers.
 // This uses a singleton pattern to ensure only one client is created per process.
-func GetKafkaClient(clientID string, brokers []string) (*kgo.Client, error) {
+func GetKafkaClient(brokers []string) (*kgo.Client, error) {
 	// return client if input is empty
 	// it is used for graceful shutdown
-	if len(brokers) > 0 || clientID != "" {
+	if len(brokers) == 0 {
 		return kafkaClient, nil
 	}
 

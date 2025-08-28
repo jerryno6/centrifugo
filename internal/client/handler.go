@@ -822,7 +822,7 @@ func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent) error {
 
 	// TODO: should move this to initializer
 	// Get kafka client
-	client, err := brokerpublishing.GetKafkaClient(c.UserID(), cfg.Publishers[0].Kafka.Brokers)
+	client, err := brokerpublishing.GetKafkaClient(cfg.Publishers[0].Kafka.Brokers)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to get Kafka client")
 		return centrifuge.ErrorBadRequest

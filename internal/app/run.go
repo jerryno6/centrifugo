@@ -373,7 +373,7 @@ func handleSignals(
 			}
 
 			// pass empty, nil to get current client
-			client, _ := brokerpublishing.GetKafkaClient("", nil)
+			client, _ := brokerpublishing.GetKafkaClient(nil)
 			if client != nil {
 				client.Context().Done()
 				client.Close()
