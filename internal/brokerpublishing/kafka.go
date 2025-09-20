@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
@@ -33,19 +34,22 @@ func GetKafkaClient(brokers []string) (*kgo.Client, error) {
 			kgo.RequiredAcks(kgo.AllISRAcks()),
 		}
 		kafkaClient, err = kgo.NewClient(opts...)
+
+		log.Info().Msg("Kafka client created with brokers: " + fmt.Sprintf("%v", brokers))
 	})
 	return kafkaClient, err
 }
 
 // Publish sends a message to the specified Kafka topic.
 // It returns an error if the message cannot be sent synchronously.
-func Publish(client *kgo.Client, topic string, data []byte, headers []kgo.RecordHeader) error {
+func Publish(client *kgo.Client, topic string, key []byte, data []byte, headers []kgo.RecordHeader) error {
 	if client == nil {
 		return fmt.Errorf("kafka client is nil")
 	}
 
 	record := &kgo.Record{
 		Topic: topic,
+		Key:   key,
 		Value: data,
 	}
 

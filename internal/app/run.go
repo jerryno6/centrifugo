@@ -94,6 +94,16 @@ func Run(cmd *cobra.Command, configFile string) {
 		entry = entry.Bool("fips", true)
 	}
 
+	if len(cfg.Publishers) > 0 {
+		// loop through publishers and add to entry
+		for _, publisher := range cfg.Publishers {
+			if publisher.Enabled && len(publisher.Kafka.Brokers) > 0 {
+				entry = entry.Any("publisher.Brokers", publisher.Kafka.Brokers)
+				entry = entry.Any("publisher.Topics", publisher.Kafka.Topics)
+				entry = entry.Str("publisher.ClientID", publisher.Kafka.ClientID)
+			}
+		}
+	}
 	if cfg.Broker.Enabled {
 		entry = entry.Str("broker", cfg.Broker.Type)
 	}
@@ -407,4 +417,5 @@ func handleSignals(
 			os.Exit(0)
 		}
 	}
+
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"unicode"
 
 	"github.com/centrifugal/centrifugo/v6/internal/brokerpublishing"
@@ -828,8 +829,16 @@ func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent) error {
 		return centrifuge.ErrorBadRequest
 	}
 
+	// Serialize the data to object
+	var msg WSMessage
+	if err := json.Unmarshal(e.Data, &msg); err != nil {
+		return fmt.Errorf("failed to deserialize message: %w", err)
+	}
+
+	key := []byte(fmt.Sprintf("%s%s", msg.Data.GameID, msg.Data.UserID))
+
 	// publish message to messageBroker
-	err = brokerpublishing.Publish(client, topic, e.Data, nil)
+	err = brokerpublishing.Publish(client, topic, key, e.Data, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to publish message to messageBroker")
 		return centrifuge.ErrorBadRequest
