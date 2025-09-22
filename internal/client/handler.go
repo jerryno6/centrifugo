@@ -215,9 +215,7 @@ func (h *Handler) Setup() error {
 
 		client.OnMessage(func(event centrifuge.MessageEvent) {
 			h.runConcurrentlyIfNeeded(client.Context(), concurrency, semaphore, func() {
-				err := h.OnMessage(client, event)
-				// TODO: handle reply and error
-				_ = err
+				h.OnMessage(client, event)
 			})
 		})
 
@@ -797,7 +795,7 @@ type Score struct {
 }
 
 // OnMessage ...
-func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent) error {
+func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent) {
 	cfg := h.cfgContainer.Config()
 
 	var allowed bool = true
@@ -808,43 +806,28 @@ func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent) error {
 
 	if !allowed {
 		log.Info().Str("client", c.ID()).Str("user", c.UserID()).Msg("attempt to publish without sufficient permission")
-		return centrifuge.ErrorPermissionDenied
-	}
-
-	var wsMsg WSMessage
-	err := json.Unmarshal(e.Data, &wsMsg)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to unmarshal WSMessage")
-		return centrifuge.ErrorBadRequest
+		return
 	}
 
 	// currently, we only support 1 topic
 	topic := cfg.Publishers[0].Kafka.Topics[0]
 
-	// TODO: should move this to initializer
-	// Get kafka client
-	client, err := brokerpublishing.GetKafkaClient(cfg.Publishers[0].Kafka.Brokers)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to get Kafka client")
-		return centrifuge.ErrorBadRequest
-	}
-
 	// Serialize the data to object
 	var msg WSMessage
 	if err := json.Unmarshal(e.Data, &msg); err != nil {
-		return fmt.Errorf("failed to deserialize message: %w", err)
+		log.Error().Err(err).Msg("failed to unmarshal WSMessage")
+	}
+
+	// todo: just to test if the max score reach the api
+	if msg.Data.TotalScore == 1000 {
+		log.Info().Str("user", msg.Data.UserID).Int("score", msg.Data.TotalScore).Msg("User reached max score")
 	}
 
 	key := []byte(fmt.Sprintf("%s%s", msg.Data.GameID, msg.Data.UserID))
 
 	// publish message to messageBroker
-	err = brokerpublishing.Publish(client, topic, key, e.Data, nil)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to publish message to messageBroker")
-		return centrifuge.ErrorBadRequest
-	}
-
-	return err
+	client := brokerpublishing.GetKafkaClient()
+	brokerpublishing.Publish(client, topic, key, e.Data, nil)
 }
 
 // OnPublish ...

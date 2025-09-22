@@ -205,7 +205,12 @@ func Run(cmd *cobra.Command, configFile string) {
 		UseOpenTelemetry: useConsumingOpentelemetry,
 	})
 
-	// todo: write code for publishingHandler & add publishingService to serviceManager
+	// todo: move this to brokerpublishing.go
+	err = brokerpublishing.InitKafkaClient(cfg.Publishers[0].Kafka.Brokers)
+	if err != nil {
+		log.Fatal().Err(err).Msg("error creating Kafka client")
+	}
+
 	consumingHandler := api.NewConsumingHandler(node, consumingAPIExecutor, api.ConsumingHandlerConfig{
 		UseOpenTelemetry: useConsumingOpentelemetry,
 	})
@@ -383,7 +388,7 @@ func handleSignals(
 			}
 
 			// pass empty, nil to get current client
-			client, _ := brokerpublishing.GetKafkaClient(nil)
+			client := brokerpublishing.GetKafkaClient()
 			if client != nil {
 				client.Context().Done()
 				client.Close()

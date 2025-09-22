@@ -17,15 +17,7 @@ var (
 
 const clientID = "centrifugo"
 
-// GetKafkaClient returns a Kafka client for the given client ID and brokers.
-// This uses a singleton pattern to ensure only one client is created per process.
-func GetKafkaClient(brokers []string) (*kgo.Client, error) {
-	// return client if input is empty
-	// it is used for graceful shutdown
-	if len(brokers) == 0 {
-		return kafkaClient, nil
-	}
-
+func InitKafkaClient(brokers []string) error {
 	var err error
 	kafkaClientOnce.Do(func() {
 		opts := []kgo.Opt{
@@ -37,14 +29,19 @@ func GetKafkaClient(brokers []string) (*kgo.Client, error) {
 
 		log.Info().Msg("Kafka client created with brokers: " + fmt.Sprintf("%v", brokers))
 	})
-	return kafkaClient, err
+
+	return err
+}
+
+func GetKafkaClient() *kgo.Client {
+	return kafkaClient
 }
 
 // Publish sends a message to the specified Kafka topic.
 // It returns an error if the message cannot be sent synchronously.
-func Publish(client *kgo.Client, topic string, key []byte, data []byte, headers []kgo.RecordHeader) error {
+func Publish(client *kgo.Client, topic string, key []byte, data []byte, headers []kgo.RecordHeader) {
 	if client == nil {
-		return fmt.Errorf("kafka client is nil")
+		log.Error().Msg("Publish(). Kafka client is nil")
 	}
 
 	record := &kgo.Record{
@@ -58,10 +55,15 @@ func Publish(client *kgo.Client, topic string, key []byte, data []byte, headers 
 	}
 
 	// Use ProduceSync for synchronous error handling
-	err := client.ProduceSync(context.Background(), record).FirstErr()
-	if err != nil {
-		return fmt.Errorf("failed to publish message to topic %s: %w", topic, err)
-	}
+	errs := client.ProduceSync(context.Background(), record)
+	if len(errs) > 0 {
 
-	return nil
+		// loop through errs and log each error
+		for _, err := range errs {
+			// check err and err.Err for nil
+			if err.Err != nil {
+				log.Error().Err(err.Err).Msg("Publish(). Failed to publish message to Kafka")
+			}
+		}
+	}
 }
