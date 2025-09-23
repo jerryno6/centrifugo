@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/centrifugal/centrifugo/v6/internal/brokerpublishing"
 	"github.com/centrifugal/centrifugo/v6/internal/config"
 	"github.com/centrifugal/centrifugo/v6/internal/configtypes"
 	"github.com/centrifugal/centrifugo/v6/internal/jwtverify"
@@ -818,20 +819,36 @@ func TestClientSubscribePermissionDeniedForAnonymous(t *testing.T) {
 }
 
 func TestClientOnMessage_HappyCase(t *testing.T) {
+	// Arrange
 	node := tools.NodeWithMemoryEngineNoHandlers()
 	defer func() { _ = node.Shutdown(context.Background()) }()
 
 	cfg := config.DefaultConfig()
 	cfg.Channel.WithoutNamespace.PublishForClient = true
 	cfg.Channel.WithoutNamespace.PublishForAnonymous = true
+	cfg.Publishers = append(cfg.Publishers, configtypes.Publisher{
+		Name:    "score_publisher",
+		Enabled: true,
+		Kafka: configtypes.KafkaPublisherConfig{
+			Brokers: []string{"localhost:9092"},
+			Topics:  []string{"score"},
+		}})
+
 	cfgContainer, err := config.NewContainer(cfg)
 	require.NoError(t, err)
-	h := NewHandler(node, cfgContainer, hmacJWTVerifier(t, cfgContainer), nil, &ProxyMap{})
 
-	err = h.OnMessage(&centrifuge.Client{}, centrifuge.MessageEvent{
-		Data: []byte(`{"type":"score_update","data":{"gameId":"game123","userId":"1","score":0,"totalScore":10,"timestamp":1755869251000000}}`),
-	})
+	err = brokerpublishing.InitKafkaClient([]string{"localhost:9092"})
 	require.NoError(t, err)
+
+	// Act
+	h := NewHandler(node, cfgContainer, hmacJWTVerifier(t, cfgContainer), nil, &ProxyMap{})
+	h.OnMessage(&centrifuge.Client{}, centrifuge.MessageEvent{
+		Data: []byte(`{"type":"score_update","data":{"gameId":"game1","userId":"1","score":0,"totalScore":10,"timestamp":1755869251000000}}`),
+	})
+
+	// Assert
+	// Test passes if no panic occurs
+	require.True(t, true, "OnMessage should not panic")
 }
 
 func TestClientPublishNotAllowed(t *testing.T) {

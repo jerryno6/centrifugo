@@ -39,13 +39,13 @@ func GetKafkaClient() *kgo.Client {
 
 // Publish sends a message to the specified Kafka topic.
 // It returns an error if the message cannot be sent synchronously.
-func Publish(client *kgo.Client, topic string, key []byte, data []byte, headers []kgo.RecordHeader) {
+func Publish(client *kgo.Client, topic *string, key []byte, data []byte, headers []kgo.RecordHeader) {
 	if client == nil {
 		log.Error().Msg("Publish(). Kafka client is nil")
 	}
 
 	record := &kgo.Record{
-		Topic: topic,
+		Topic: *topic,
 		Key:   key,
 		Value: data,
 	}

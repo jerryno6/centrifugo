@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"unicode"
 
 	"github.com/centrifugal/centrifugo/v6/internal/brokerpublishing"
@@ -16,6 +17,7 @@ import (
 	"github.com/centrifugal/centrifugo/v6/internal/logging"
 	"github.com/centrifugal/centrifugo/v6/internal/proxy"
 	"github.com/centrifugal/centrifugo/v6/internal/subsource"
+	easyjson "github.com/mailru/easyjson"
 
 	"github.com/centrifugal/centrifuge"
 	"github.com/rs/zerolog/log"
@@ -103,9 +105,11 @@ func (h *Handler) Setup() error {
 
 	// var messageProxyHandler proxy.MessageHandlerFunc
 	// if len(h.proxyMap.MessageProxies) > 0 {
-	// 	messageProxyHandler = proxy.NewMessageHandler(proxy.MessageHandlerConfig{
-	// 		Proxies: h.proxyMap.MessageProxies,
-	// 	}).Handle(h.node)
+	// 	config := proxy.MessageHandlerConfig{
+	// 		Topic : h.cfgContainer.Config().Publishers[0].Kafka.Topics[0],
+	// 		Brokers: h.cfgContainer.Config().Publishers[0].Kafka.Brokers
+	// 	}
+	// 	messageProxyHandler = proxy.NewMessageHandler(config).Handle(h.node)
 	// }
 
 	var publishProxyHandler proxy.PublishHandlerFunc
@@ -780,50 +784,27 @@ func (h *Handler) OnSubscribe(c Client, e centrifuge.SubscribeEvent, subscribePr
 	}, SubscribeExtra{}, nil
 }
 
-type WSMessage struct {
-	Type string `json:"type"`
-	Data Score  `json:"data"`
-}
-
-// Score represents a score submission from client
-type Score struct {
-	GameID     string `json:"gameId"`
-	UserID     string `json:"userId"`
-	Score      int    `json:"score"`
-	TotalScore int    `json:"totalScore"`
-	Timestamp  int64  `json:"timestamp"` // epoch time in UnixMicro()
-}
+var (
+	topic     *string
+	topicOnce sync.Once
+)
 
 // OnMessage ...
 func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent) {
-	cfg := h.cfgContainer.Config()
-
-	var allowed bool = true
-
-	if cfg.Client.Insecure {
-		allowed = true
-	}
-
-	if !allowed {
-		log.Info().Str("client", c.ID()).Str("user", c.UserID()).Msg("attempt to publish without sufficient permission")
-		return
-	}
 
 	// currently, we only support 1 topic
-	topic := cfg.Publishers[0].Kafka.Topics[0]
+	// TODO: should move this to config
+	topicOnce.Do(func() {
+		cfg := h.cfgContainer.Config()
+		topic = &cfg.Publishers[0].Kafka.Topics[0]
+	})
 
-	// Serialize the data to object
 	var msg WSMessage
-	if err := json.Unmarshal(e.Data, &msg); err != nil {
+	if err := easyjson.Unmarshal(e.Data, &msg); err != nil {
 		log.Error().Err(err).Msg("failed to unmarshal WSMessage")
 	}
 
-	// todo: just to test if the max score reach the api
-	if msg.Data.TotalScore == 1000 {
-		log.Info().Str("user", msg.Data.UserID).Int("score", msg.Data.TotalScore).Msg("User reached max score")
-	}
-
-	key := []byte(fmt.Sprintf("%s%s", msg.Data.GameID, msg.Data.UserID))
+	var key []byte = fmt.Appendf(nil, "%s%s", msg.Data.GameID, msg.Data.UserID)
 
 	// publish message to messageBroker
 	client := brokerpublishing.GetKafkaClient()
