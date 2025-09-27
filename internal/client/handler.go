@@ -17,7 +17,7 @@ import (
 	"github.com/centrifugal/centrifugo/v6/internal/logging"
 	"github.com/centrifugal/centrifugo/v6/internal/proxy"
 	"github.com/centrifugal/centrifugo/v6/internal/subsource"
-	easyjson "github.com/mailru/easyjson"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/centrifugal/centrifuge"
 	"github.com/rs/zerolog/log"
@@ -800,11 +800,12 @@ func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent) {
 	})
 
 	var msg WSMessage
-	if err := easyjson.Unmarshal(e.Data, &msg); err != nil {
+	if err := proto.Unmarshal(e.Data, &msg); err != nil {
+		// if err := easyjson.Unmarshal(e.Data, &msg); err != nil {
 		log.Error().Err(err).Msg("failed to unmarshal WSMessage")
 	}
 
-	var key []byte = fmt.Appendf(nil, "%s%s", msg.Data.GameID, msg.Data.UserID)
+	var key []byte = fmt.Appendf(nil, "%s%s", msg.Data.GameId, msg.Data.UserId)
 
 	// publish message to messageBroker
 	client := brokerpublishing.GetKafkaClient()
