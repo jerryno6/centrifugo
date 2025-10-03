@@ -737,6 +737,8 @@ type Publisher struct {
 
 	// Kafka allows defining options for kafka publisher.
 	Kafka KafkaPublisherConfig `mapstructure:"kafka" json:"kafka" envconfig:"kafka" yaml:"kafka" toml:"kafka"`
+
+	DetailedLogging bool `mapstructure:"detailed_logging" json:"detailed_logging" envconfig:"detailed_logging" default:"false" yaml:"detailed_logging" toml:"detailed_logging"`
 }
 
 // KafkaPublisherConfig is a configuration for Kafka async publisher.

@@ -785,24 +785,35 @@ func (h *Handler) OnSubscribe(c Client, e centrifuge.SubscribeEvent, subscribePr
 }
 
 var (
-	topic     *string
-	topicOnce sync.Once
+	topic           *string
+	topicOnce       sync.Once
+	detailedLogging *bool
 )
 
 // OnMessage ...
 func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent) {
-
 	// currently, we only support 1 topic
 	// TODO: should move this to config
 	topicOnce.Do(func() {
 		cfg := h.cfgContainer.Config()
 		topic = &cfg.Publishers[0].Kafka.Topics[0]
+		detailedLogging = &cfg.Publishers[0].DetailedLogging
+
+		log.Info().Str("topic", *topic).Msg("Set topic variable")
 	})
 
 	var msg WSMessage
+	if *detailedLogging {
+		log.Info().Msg("Received message")
+	}
+
 	if err := proto.Unmarshal(e.Data, &msg); err != nil {
 		// if err := easyjson.Unmarshal(e.Data, &msg); err != nil {
 		log.Error().Err(err).Msg("failed to unmarshal WSMessage")
+	}
+
+	if *detailedLogging {
+		log.Info().Str("gameId", msg.Data.GameId).Str("userId", msg.Data.UserId).Msg("Parsed WSMessage")
 	}
 
 	var key []byte = fmt.Appendf(nil, "%s%s", msg.Data.GameId, msg.Data.UserId)
@@ -810,6 +821,9 @@ func (h *Handler) OnMessage(c Client, e centrifuge.MessageEvent) {
 	// publish message to messageBroker
 	client := brokerpublishing.GetKafkaClient()
 	brokerpublishing.Publish(client, topic, key, e.Data, nil)
+	if *detailedLogging {
+		log.Info().Str("gameId", msg.Data.GameId).Str("userId", msg.Data.UserId).Msg("Published message to Kafka")
+	}
 }
 
 // OnPublish ...
