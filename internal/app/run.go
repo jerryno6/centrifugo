@@ -101,7 +101,16 @@ func Run(cmd *cobra.Command, configFile string) {
 				entry = entry.Any("publisher.Brokers", publisher.Kafka.Brokers)
 				entry = entry.Any("publisher.Topics", publisher.Kafka.Topics)
 				entry = entry.Str("publisher.ClientID", publisher.Kafka.ClientID)
+
+				// todo: move this to brokerpublishing.go
+				err = brokerpublishing.InitKafkaClient(cfg.Publishers[0].Kafka.Brokers)
+				if err != nil {
+					log.Fatal().Err(err).Msg("error creating Kafka client")
+				}
 			}
+
+			// only log the first enabled publisher
+			break
 		}
 	}
 	if cfg.Broker.Enabled {
@@ -204,12 +213,6 @@ func Run(cmd *cobra.Command, configFile string) {
 		Protocol:         "consuming",
 		UseOpenTelemetry: useConsumingOpentelemetry,
 	})
-
-	// todo: move this to brokerpublishing.go
-	err = brokerpublishing.InitKafkaClient(cfg.Publishers[0].Kafka.Brokers)
-	if err != nil {
-		log.Fatal().Err(err).Msg("error creating Kafka client")
-	}
 
 	consumingHandler := api.NewConsumingHandler(node, consumingAPIExecutor, api.ConsumingHandlerConfig{
 		UseOpenTelemetry: useConsumingOpentelemetry,
